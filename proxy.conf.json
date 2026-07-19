@@ -1,0 +1,10 @@
+{
+  "/api": {
+
+        "target": "https://app-edvanz-api-prod.azurewebsites.net",
+
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
