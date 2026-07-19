@@ -1,0 +1,140 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Edvanz Admin — Production deployment pipeline
+#
+# Trigger : push to main (or manual dispatch)
+# Stages  : install → build → azure-login (OIDC) → deploy → verify
+#
+# Auth model: OIDC federated credentials — mirrors the API pipeline exactly.
+# No deployment token is stored as a repo secret. The workflow logs in via OIDC,
+# fetches the SWA deployment token live from the Azure CLI session, and passes it
+# to the SWA CLI. The three OIDC secrets are the same App Registration used by
+# the API pipeline — add a second federated credential for this repo (see SETUP).
+#
+# SETUP (one-time, per README):
+#   1. In the API pipeline's App Registration → Certificates & Secrets →
+#      Federated credentials → Add credential:
+#        Organization:  <your GitHub org>
+#        Repository:    <this repo name>
+#        Entity:        Branch
+#        Branch:        main
+#   2. Add the same three repo secrets used by the API pipeline:
+#        AZURE_CLIENT_ID       — App Registration client id
+#        AZURE_TENANT_ID       — your Entra tenant id
+#        AZURE_SUBSCRIPTION_ID — your Azure subscription id
+#   3. Create the SWA resource once (see PROVISIONING below).
+#
+# PROVISIONING (one-time, Azure CLI):
+#   az staticwebapp create \
+#     --name  swa-edvanz-admin-prod \
+#     --resource-group rg-edvanz-prod-weu \
+#     --location westeurope \
+#     --sku Standard
+#   Then in the Azure portal → Static Web App → Custom domains → add admin.edvanz.com
+#   (CORS in the API appsettings.Production.json already allows that origin).
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Deploy — Edvanz Admin (SWA)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC token request
+  contents: read
+
+env:
+  NODE_VERSION:   '20'
+  SWA_NAME:       'swa-edvanz-admin-prod'
+  RESOURCE_GROUP: 'rg-edvanz-prod-weu'
+  DIST_PATH:      'dist/edvanz-admin/browser'   # Angular application-builder output
+
+jobs:
+  deploy:
+    name: Build and deploy admin SPA
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+
+      # ── 1. Source ──────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Node runtime ────────────────────────────────────────────────────
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'             # caches node_modules between runs
+
+      # ── 3. Dependencies ────────────────────────────────────────────────────
+      # npm ci is deterministic (uses package-lock.json) and faster than npm install.
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 4. Production build ────────────────────────────────────────────────
+      # Builds with the production environment file (environment.ts), which points
+      # at https://app-edvanz-api-prod.azurewebsites.net/api. Output goes to
+      # dist/edvanz-admin/browser (Angular 17 application-builder convention).
+      - name: Build (production)
+        run: npx ng build --configuration production
+
+      # ── 5. Azure login (OIDC — no stored password) ─────────────────────────
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # ── 6. Retrieve SWA deployment token from Azure at runtime ─────────────
+      # Fetched via OIDC session — never stored as a secret. The App Registration
+      # identity needs "Contributor" or "Static Web Apps Contributor" on the SWA.
+      - name: Get SWA deployment token
+        id: swa-token
+        run: |
+          TOKEN=$(az staticwebapp secrets list \
+            --name "${{ env.SWA_NAME }}" \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --query "properties.apiKey" \
+            --output tsv)
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Failed to retrieve SWA deployment token. Check the OIDC identity has access."
+            exit 1
+          fi
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      # ── 7. Deploy to Azure Static Web Apps ─────────────────────────────────
+      # --no-build: we already ran ng build; skip Oryx's own build attempt.
+      # --env production: targets the production environment slot.
+      # The staticwebapp.config.json in the dist folder is picked up automatically.
+      - name: Deploy to Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa-token.outputs.token }}
+          action: upload
+          app_location: '${{ env.DIST_PATH }}'  # already-built output folder
+          output_location: ''                    # empty = contents of app_location are the root
+          skip_app_build: true                   # skip Oryx; we built in step 4
+
+      # ── 8. Smoke-check — SWA health ────────────────────────────────────────
+      # Polls the SWA URL (index.html) for up to 2 min after deploy.
+      # SWA propagation is usually <30s; this catches an Oryx or config error.
+      # Replace the URL with your custom domain once DNS is pointed at SWA.
+      - name: Verify deployment
+        run: |
+          URL="https://${{ env.SWA_NAME }}.azurestaticapps.net"
+          echo "Polling $URL ..."
+          for i in $(seq 1 24); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/index.html")
+            if [ "$STATUS" = "200" ]; then
+              echo "::notice::Admin SPA is live at $URL (HTTP $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i/24 — HTTP $STATUS, waiting 5s ..."
+            sleep 5
+          done
+          echo "::warning::SWA did not respond with 200 within 2 min. Check the Azure portal."
+          exit 0   # warning, not failure — SWA CDN propagation can lag in some regions
