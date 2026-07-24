@@ -21,23 +21,8 @@ interface Crumb {
   selector: 'app-breadcrumb',
   standalone: true,
   imports: [RouterLink],
-  template: `
-    <nav aria-label="breadcrumb">
-      <ol class="breadcrumb mb-0">
-        @for (crumb of crumbs(); track crumb.url; let last = $last) {
-          @if (last) {
-            <li class="breadcrumb-item active" aria-current="page">
-              {{ crumb.label }}
-            </li>
-          } @else {
-            <li class="breadcrumb-item">
-              <a [routerLink]="crumb.url">{{ crumb.label }}</a>
-            </li>
-          }
-        }
-      </ol>
-    </nav>
-  `,
+  templateUrl: './breadcrumb.component.html',
+  styleUrl: './breadcrumb.component.css',
 })
 export class BreadcrumbComponent {
   private readonly router = inject(Router);

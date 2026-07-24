@@ -1,0 +1,31 @@
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1085;
+}
+.confirm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.5rem;
+  width: min(440px, 92vw);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+  z-index: 1086;
+}
+.confirm-title {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+.confirm-message {
+  color: var(--edvanz-muted, #6b7280);
+  margin-bottom: 1.25rem;
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

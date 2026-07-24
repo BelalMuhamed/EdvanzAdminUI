@@ -1,0 +1,25 @@
+@if (dialog.state().open) {
+  <div class="confirm-backdrop" (click)="dialog.respond(false)"></div>
+  <div class="confirm-modal" role="dialog" aria-modal="true">
+    <h5 class="confirm-title">{{ dialog.state().title }}</h5>
+    <p class="confirm-message">{{ dialog.state().message }}</p>
+    <div class="confirm-actions">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        (click)="dialog.respond(false)"
+      >
+        {{ dialog.state().cancelText }}
+      </button>
+      <button
+        type="button"
+        class="btn"
+        [class.btn-danger]="dialog.state().danger"
+        [class.btn-primary]="!dialog.state().danger"
+        (click)="dialog.respond(true)"
+      >
+        {{ dialog.state().confirmText }}
+      </button>
+    </div>
+  </div>
+}

@@ -1,0 +1,7 @@
+.empty-icon {
+  font-size: 2.75rem;
+  line-height: 1;
+}
+.empty-state {
+  color: var(--edvanz-muted, #6b7280);
+}

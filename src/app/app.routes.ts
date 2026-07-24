@@ -44,7 +44,7 @@ export const APP_ROUTES: Routes = [
   {
     path: 'forbidden',
     loadComponent: () =>
-      import('./shared/components/status-page.component').then(
+      import('./shared/components/status-page/status-page.component').then(
         (m) => m.StatusPageComponent,
       ),
     data: {
@@ -56,7 +56,7 @@ export const APP_ROUTES: Routes = [
   {
     path: '**',
     loadComponent: () =>
-      import('./shared/components/status-page.component').then(
+      import('./shared/components/status-page/status-page.component').then(
         (m) => m.StatusPageComponent,
       ),
     data: {

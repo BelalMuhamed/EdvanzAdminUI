@@ -1,0 +1,14 @@
+.status-wrapper {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2rem;
+}
+.status-code {
+  font-size: 4.5rem;
+  font-weight: 800;
+  color: var(--edvanz-primary, #2563eb);
+  line-height: 1;
+}

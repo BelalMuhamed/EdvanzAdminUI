@@ -10,8 +10,8 @@ import { CurrentSubscriptionDto } from '../../../core/models/subscription.model'
 import { TeacherSubscriptionDto } from '../../../core/models/teacher.model';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { ConfirmDialogService } from '../../../shared/components/confirm-dialog/confirm-dialog.service';
 import { SubscriptionStatusBadgeComponent } from './subscription-status-badge.component';
+import { ConfirmDialogService } from '../../../shared/components/confirm-dialog/confirm-dialog.service';
 
 /**
  * Subscription tab for one teacher. Every mutation returns the fresh
