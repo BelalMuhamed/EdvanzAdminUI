@@ -20,15 +20,22 @@ export class SubscriptionService {
   private readonly base = environment.apiBaseUrl;
 
   /**
+   * POST /api/admin/subscriptions/cancel
+   * Immediately cancels (expires in place) the teacher's current subscription.
+   */
+  cancel(request: CancelSubscriptionRequest): Observable<CurrentSubscriptionDto> {
+    return this.http
+      .post<ApiResult<CurrentSubscriptionDto>>(
+        `${this.base}/admin/subscriptions/cancel`,
+        request,
+      )
+      .pipe(map((r) => r.data));
+  }
+
+  /**
    * GET /api/teacher/{teacherId}/subscription
    * Returns the teacher's current subscription (or null if none).
    */
-  cancel(request: CancelSubscriptionRequest) {
-  return this.http.post<CurrentSubscriptionDto>(
-    `${this.base}/admin/subscriptions/cancel`,
-    request
-  );
-}
   getByTeacher(teacherId: number): Observable<TeacherSubscriptionDto | null> {
     return this.http
       .get<ApiResult<TeacherSubscriptionDto | null>>(

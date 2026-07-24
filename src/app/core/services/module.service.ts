@@ -18,8 +18,6 @@ export class ModuleService {
   /**
    * GET /api/admin/tutor-modules/catalogue
    * All available modules in the platform.
-   * ⚠ FLAG: This endpoint does not yet exist on the backend.
-   * Ask Belal to create: GET /api/admin/tutor-modules/catalogue → Result<ModuleInfo[]>
    */
   getAllModules(): Observable<ModuleInfo[]> {
     return this.http
@@ -30,8 +28,6 @@ export class ModuleService {
   /**
    * GET /api/admin/tutor-modules/{teacherId}
    * Modules currently granted to a specific teacher.
-   * ⚠ FLAG: This endpoint does not yet exist on the backend.
-   * Ask Belal to create: GET /api/admin/tutor-modules/{teacherId} → Result<ModuleInfo[]>
    */
   getTeacherModules(teacherId: number): Observable<ModuleInfo[]> {
     return this.http
