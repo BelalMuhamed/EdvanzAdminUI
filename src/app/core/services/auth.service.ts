@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResult } from '../models/api-result.model';
-import { AuthResult, CurrentUser, LoginRequest } from '../models/auth.model';
+import { AuthResult, CurrentUser, ForceChangePasswordRequest, LoginRequest } from '../models/auth.model';
 import { TokenService } from './token.service';
 
 /**
@@ -89,4 +89,19 @@ export class AuthService {
   hasRole(role: string): boolean {
     return this.tokenService.hasRole(role);
   }
+  /**
+ * POST /api/Auth/admin/force-change-password — SuperAdmin only. Resets any
+ * user's password without old-password verification and revokes every
+ * refresh token for that user, signing them out of all devices.
+ */
+forceChangePassword(
+  req: ForceChangePasswordRequest,
+  lang: 'en' | 'ar' = 'en',
+): Observable<string | null> {
+  return this.http
+    .post<ApiResult<string | null>>(`${this.baseUrl}/admin/force-change-password`, req, {
+      headers: { 'Accept-Language': lang },
+    })
+    .pipe(map((r) => r.data));
+}
 }

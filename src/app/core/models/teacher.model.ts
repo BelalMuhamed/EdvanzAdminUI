@@ -3,6 +3,7 @@ import { PagedQuery } from './paginated-response.model';
 // ── Teacher list item (GET /api/teacher/list) ────────────────────────────────
 export interface TeacherListItem {
   id: number;
+  userId: number;
   fullName: string;
   username: string;
   teacherCode: string;

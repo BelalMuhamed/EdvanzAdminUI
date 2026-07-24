@@ -41,3 +41,15 @@ export interface JwtClaims {
   'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'?: string | string[];
   [key: string]: unknown;
 }
+/**
+ * SuperAdmin-initiated forced password reset (POST /api/Auth/admin/force-change-password).
+ * No old-password verification — `userId` targets the account (the User row id, not a
+ * Teacher/Student id); the acting admin is resolved from the JWT. Mirrors the backend
+ * `ForceChangePasswordDto`, including its password complexity rule: min 8 chars, at
+ * least one uppercase, one lowercase, one digit, one special character.
+ */
+export interface ForceChangePasswordRequest {
+  userId: number;
+  newPassword: string;
+  confirmPassword: string;
+}
