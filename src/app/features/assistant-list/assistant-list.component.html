@@ -1,0 +1,203 @@
+<div class="page-header">
+  <div>
+    <h2 class="h4 mb-1">Assistants</h2>
+    <p class="text-muted mb-0">Platform-wide assistant directory.</p>
+  </div>
+  <a routerLink="/assistants/new" class="btn btn-primary">+ New assistant</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="filters-row mb-3">
+      <div class="filter-teacher">
+        <app-searchable-select
+          [options]="teacherOptions()"
+          [selectedValue]="selectedTeacherId"
+          allLabel="All teachers"
+          placeholder="Filter by teacher"
+          searchPlaceholder="Search teachers…"
+          (selectedValueChange)="onTeacherFilterChange($event)"
+        />
+      </div>
+      <div class="filter-search">
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Search by name, username, email or phone…"
+          [formControl]="searchControl"
+        />
+      </div>
+    </div>
+
+    @if (page(); as p) {
+      @if (p.data.length === 0) {
+        <app-empty-state
+          icon="🧑‍💼"
+          title="No assistants found"
+          message="Try a different search or teacher filter."
+        />
+      } @else {
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Phone</th>
+                <th>Teacher</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (assistant of p.data; track assistant.id) {
+                <tr>
+                  <td class="fw-medium">{{ assistant.fullName }}</td>
+                  <td class="text-muted font-monospace">{{ assistant.username }}</td>
+                  <td>{{ assistant.phoneNumber || '—' }}</td>
+                  <td>{{ assistant.teacherName }}</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.text-bg-success]="assistant.accountStatus === 'Active'"
+                      [class.text-bg-secondary]="assistant.accountStatus !== 'Active'"
+                    >
+                      {{ assistant.accountStatus }}
+                    </span>
+                  </td>
+                  <td class="text-end text-nowrap">
+
+                     <a [routerLink]="['/assistants', assistant.id, 'edit']"
+                      class="btn btn-sm btn-outline-secondary"
+                    >
+                      Edit
+                    </a>
+
+                    @if (assistant.accountStatus === 'Active') {
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-warning ms-1"
+                        [disabled]="isToggling(assistant.id)"
+                        (click)="deactivate(assistant)"
+                      >
+                        {{ isToggling(assistant.id) ? '…' : 'Deactivate' }}
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-success ms-1"
+                        [disabled]="isToggling(assistant.id)"
+                        (click)="activate(assistant)"
+                      >
+                        {{ isToggling(assistant.id) ? '…' : 'Activate' }}
+                      </button>
+                    }
+
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-dark ms-1"
+                      (click)="openPasswordReset(assistant)"
+                    >
+                      Reset Password
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-2">
+          <small class="text-muted">
+            Showing {{ p.data.length }} of {{ p.totalCount }} assistants
+          </small>
+          <div class="btn-group">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              [disabled]="p.page <= 1"
+              (click)="goToPage(p.page - 1)"
+            >
+              Previous
+            </button>
+            <span class="btn btn-outline-secondary btn-sm disabled">
+              {{ p.page }} / {{ p.totalPages || 1 }}
+            </span>
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              [disabled]="p.page >= p.totalPages"
+              (click)="goToPage(p.page + 1)"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+@if (passwordResetTarget(); as target) {
+  <div class="pw-backdrop" (click)="closePasswordReset()"></div>
+  <div class="pw-modal" role="dialog" aria-modal="true">
+    <h5 class="pw-title">Reset password — {{ target.fullName }}</h5>
+    <p class="pw-message">
+      Sets a new password with no old-password check. {{ target.fullName }} will be
+      signed out of every active session immediately.
+    </p>
+
+    <form [formGroup]="passwordForm" (ngSubmit)="submitPasswordReset()" novalidate>
+      <div class="mb-3">
+        <label class="form-label" for="newPassword">New password</label>
+        <input
+          id="newPassword"
+          type="password"
+          class="form-control"
+          formControlName="newPassword"
+          autocomplete="new-password"
+          [class.is-invalid]="isInvalid('newPassword')"
+        />
+        @if (isInvalid('newPassword') && passwordForm.controls.newPassword.errors?.['required']) {
+          <div class="invalid-feedback d-block">New password is required.</div>
+        } @else if (isInvalid('newPassword')) {
+          <div class="invalid-feedback d-block">
+            Min 8 characters, with at least one uppercase, one lowercase, one number,
+            and one special character.
+          </div>
+        }
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label" for="confirmPassword">Confirm password</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          class="form-control"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          [class.is-invalid]="isConfirmInvalid()"
+        />
+        @if (isConfirmInvalid() && passwordForm.controls.confirmPassword.errors?.['required']) {
+          <div class="invalid-feedback d-block">Please confirm the new password.</div>
+        } @else if (isConfirmInvalid()) {
+          <div class="invalid-feedback d-block">Passwords do not match.</div>
+        }
+      </div>
+
+      <div class="pw-actions">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          [disabled]="passwordSubmitting()"
+          (click)="closePasswordReset()"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-danger" [disabled]="passwordSubmitting()">
+          {{ passwordSubmitting() ? 'Resetting…' : 'Reset password' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}

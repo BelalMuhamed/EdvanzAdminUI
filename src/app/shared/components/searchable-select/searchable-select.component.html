@@ -1,0 +1,38 @@
+<div class="ss-wrapper">
+<button
+    type="button"
+    class="form-select ss-trigger"
+    [disabled]="disabled"
+    (click)="toggleOpen()"
+  >
+    <span class="ss-value">{{ selectedLabel }}</span>
+  </button>
+  @if (isOpen()) {
+    <div class="ss-panel">
+      <input
+        type="search"
+        class="form-control ss-search"
+        [placeholder]="searchPlaceholder"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="searchTerm.set($event)"
+      />
+      <ul class="ss-list">
+        <li class="ss-option" [class.active]="selectedValue == null" (click)="select(null)">
+          {{ allLabel }}
+        </li>
+        @for (opt of filteredOptions(); track opt.value) {
+          <li
+            class="ss-option"
+            [class.active]="opt.value === selectedValue"
+            (click)="select(opt.value)"
+          >
+            {{ opt.label }}
+          </li>
+        }
+        @if (filteredOptions().length === 0) {
+          <li class="ss-empty">No matches</li>
+        }
+      </ul>
+    </div>
+  }
+</div>

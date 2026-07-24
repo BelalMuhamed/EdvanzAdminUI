@@ -124,3 +124,8 @@ export interface DashboardSummary {
   expiredSubscriptions: number;
   expiringSoon: number;
 }
+// ── Teacher lookup (GET /api/teacher/lookup) — Id + FullName only, for dropdowns ────
+export interface TeacherLookupItem {
+  id: number;
+  fullName: string;
+}

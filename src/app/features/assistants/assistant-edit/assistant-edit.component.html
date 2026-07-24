@@ -1,0 +1,187 @@
+@if (loading()) {
+  <p class="text-muted">Loading assistant…</p>
+} @else if (notFound()) {
+  <app-empty-state
+    icon="🚫"
+    title="Assistant not found"
+    message="This assistant may have been removed. Go back to the list and try again."
+  >
+    <a routerLink="/assistants" class="btn btn-primary btn-sm">Back to assistants</a>
+  </app-empty-state>
+} @else {
+  <div class="page-header">
+    <h2 class="h4 mb-0">Edit assistant</h2>
+    <a routerLink="/assistants" class="btn btn-outline-secondary">Back to list</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="teacher">Teacher</label>
+            <app-searchable-select
+              id="teacher"
+              [options]="teacherOptions()"
+              [selectedValue]="teacherId()"
+              [disabled]="true"
+              allLabel="—"
+              placeholder="—"
+              searchPlaceholder="Search teachers…"
+            />
+            <div class="form-text">Teacher cannot be changed after creation.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Teacher subscription</label>
+       <div class="subscription-flag">
+              @if (subscriptionLoading()) {
+                <span class="text-muted">Loading…</span>
+              } @else {
+                @if (teacherSubscriptionStatus(); as status) {
+                  <app-subscription-status-badge [status]="status" />
+                } @else {
+                  <span class="text-muted">Unavailable</span>
+                }
+              }
+            </div>
+            <div class="form-text">Read-only — subscription cannot be changed from this page.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="fullName">Full name *</label>
+            <input
+              id="fullName"
+              class="form-control"
+              formControlName="fullName"
+              [class.is-invalid]="invalid('fullName')"
+            />
+            @if (invalid('fullName')) {
+              <div class="invalid-feedback">Full name is required.</div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="username">Username *</label>
+            <input
+              id="username"
+              class="form-control"
+              formControlName="username"
+              [class.is-invalid]="invalid('username')"
+            />
+            @if (invalid('username')) {
+              <div class="invalid-feedback">Username is required.</div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              class="form-control"
+              formControlName="email"
+              [class.is-invalid]="invalid('email')"
+            />
+            @if (invalid('email')) {
+              <div class="invalid-feedback">Enter a valid email address.</div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="phoneNumber">Phone</label>
+            <input id="phoneNumber" class="form-control" formControlName="phoneNumber" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="newPassword">New password</label>
+            <input
+              id="newPassword"
+              type="password"
+              class="form-control"
+              formControlName="newPassword"
+              autocomplete="new-password"
+              [class.is-invalid]="invalid('newPassword')"
+            />
+            <div class="form-text">Leave blank to keep the current password.</div>
+            @if (invalid('newPassword')) {
+              <div class="invalid-feedback">Minimum 8 characters.</div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="confirmNewPassword">Confirm new password</label>
+            <input
+              id="confirmNewPassword"
+              type="password"
+              class="form-control"
+              formControlName="confirmNewPassword"
+              autocomplete="new-password"
+              [class.is-invalid]="confirmInvalid()"
+            />
+            @if (confirmInvalid()) {
+              <div class="invalid-feedback">Passwords do not match.</div>
+            }
+          </div>
+        </div>
+
+        <hr class="my-4" />
+
+        <h3 class="h6 mb-3">Permissions</h3>
+
+        @if (permissionsLoading()) {
+          <p class="text-muted">Loading permissions…</p>
+        } @else if (moduleGroups().length === 0) {
+          <app-empty-state
+            icon="🔒"
+            title="No permissions available"
+            message="This teacher has no modules assigned, so there are no permissions to grant."
+          />
+        } @else {
+          <div class="module-groups">
+            @for (group of moduleGroups(); track group.id) {
+              <div class="module-group">
+                <div class="module-group-head">
+                  <span class="module-name">{{ group.moduleName }}</span>
+                  <button type="button" class="btn btn-link btn-sm p-0" (click)="toggleModule(group)">
+                    {{ isModuleFullySelected(group) ? 'Clear all' : 'Select all' }}
+                  </button>
+                </div>
+                <div class="permission-grid">
+                  @for (perm of group.permissions; track perm.permissionId) {
+                    <label class="permission-item">
+                      <input
+                        type="checkbox"
+                        class="form-check-input"
+                        [checked]="isSelected(perm.permissionId)"
+                        (change)="togglePermission(perm.permissionId)"
+                      />
+                      <span class="permission-name">{{ perm.permissionName }}</span>
+                      @if (perm.isRestricted) {
+                        <span class="badge text-bg-warning ms-1">Restricted</span>
+                      }
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          @if (selectedPermissionIds().size === 0) {
+            <p class="text-warning small mt-2">
+              Note: the backend only applies a permission change when at least one
+              permission is selected — clearing everything here will leave existing
+              grants untouched on save.
+            </p>
+          }
+        }
+
+        <div class="d-flex justify-content-end gap-2 pt-4">
+          <a routerLink="/assistants" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+            {{ submitting() ? 'Saving…' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

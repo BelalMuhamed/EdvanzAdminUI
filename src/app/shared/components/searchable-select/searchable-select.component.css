@@ -1,0 +1,64 @@
+.ss-wrapper {
+  position: relative;
+}
+.ss-trigger {
+  text-align: left;
+  cursor: pointer;
+  background: #fff;
+}
+.ss-value {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ss-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--edvanz-border, #e5e7eb);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+  z-index: 1080;
+  padding: 0.5rem;
+}
+.ss-search {
+  margin-bottom: 0.4rem;
+}
+.ss-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.ss-option {
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.ss-option:hover {
+  background: #f1f5f9;
+}
+.ss-option.active {
+  background: var(--edvanz-primary, #2563eb);
+  color: #fff;
+}
+.ss-empty {
+  padding: 0.5rem 0.6rem;
+  color: var(--edvanz-muted, #6b7280);
+}
+.ss-trigger:disabled {
+  background: #f1f5f9;
+  color: var(--edvanz-muted, #6b7280);
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+.ss-trigger:disabled {
+  background: #f1f5f9;
+  color: var(--edvanz-muted, #6b7280);
+  cursor: not-allowed;
+  opacity: 0.85;
+}

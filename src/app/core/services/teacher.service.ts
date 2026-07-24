@@ -13,6 +13,7 @@ import {
   SubjectDto,
   TeacherListItem,
   TeacherListQuery,
+  TeacherLookupItem,
   TeacherProfile,
   UpdateTeacherProfileRequest,
 } from '../models/teacher.model';
@@ -164,5 +165,11 @@ export class TeacherService {
         headers: { 'Accept-Language': lang },
       })
       .pipe(map((r) => r.data));
+  }
+  /** GET /api/teacher/lookup — Id + FullName only, no pagination. SuperAdmin only. */
+  getTeacherLookup(): Observable<TeacherLookupItem[]> {
+    return this.http
+      .get<ApiResult<TeacherLookupItem[]>>(`${this.base}/teacher/lookup`)
+      .pipe(map((r) => r.data ?? []));
   }
 }

@@ -95,7 +95,7 @@ interface NavItem {
       }
       .nav-icon {
         font-size: 1.1rem;
-        width: 1.25rem;
+        
         text-align: center;
       }
     `,
@@ -105,8 +105,9 @@ export class SidebarComponent {
   readonly collapsed = input(false);
 
   // Emoji icons keep the shell dependency-free (no icon-font package).
-  protected readonly items: NavItem[] = [
-    { label: 'Dashboard', icon: '📊', route: '/dashboard' },
-    { label: 'Teachers', icon: '🧑‍🏫', route: '/teachers' },
+ protected readonly items: NavItem[] = [
+    { label: 'Dashboard  ', icon: '📊', route: '/dashboard' },
+    { label: 'Teachers  ', icon: '🧑‍🏫', route: '/teachers' },
+    { label: 'Assistants  ', icon: '🧑‍💼', route: '/assistants' },
   ];
 }
