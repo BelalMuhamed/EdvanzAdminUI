@@ -1,0 +1,79 @@
+<div class="page-header">
+  <a routerLink="/students" class="btn btn-outline-secondary btn-sm mb-2">← Back to students</a>
+</div>
+
+@if (loading()) {
+  <p class="text-muted">Loading…</p>
+} @else if (notFound()) {
+  <app-empty-state
+    icon="🚫"
+    title="Student not found"
+    message="This student may have been deleted or the link is incorrect."
+  />
+} @else {
+  @if (student(); as s) {
+    <div class="detail-card">
+      <div class="detail-head">
+        <div class="avatar">{{ initials(s.studentName) }}</div>
+        <div class="flex-grow-1">
+          <h2 class="h4 mb-1">{{ s.studentName }}</h2>
+          <div class="text-muted font-monospace">{{ s.studentCode }}</div>
+        </div>
+        <span
+          class="badge"
+          [class.text-bg-success]="s.isComplete"
+          [class.text-bg-secondary]="!s.isComplete"
+        >
+          {{ s.isComplete ? 'Complete' : 'Incomplete' }}
+        </span>
+        <a [routerLink]="['/students', s.id, 'edit']" class="btn btn-primary btn-sm ms-3">Edit</a>
+      </div>
+
+      <div class="tab-body">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <h3 class="h6 section-title">Contact</h3>
+            <dl class="detail-list">
+              <dt>Student phone</dt>
+              <dd>{{ s.studentPhoneNumber || '—' }}</dd>
+              <dt>Parent phone</dt>
+              <dd>{{ s.parentPhoneNumber || '—' }}</dd>
+              <dt>Teacher</dt>
+              <dd>#{{ s.teacherId }}</dd>
+              <dt>Added</dt>
+              <dd>{{ s.createdAt | date: 'medium' }}</dd>
+            </dl>
+          </div>
+
+          <div class="col-md-6">
+            <h3 class="h6 section-title">Mobile linking</h3>
+            <dl class="detail-list">
+              <dt>Student code</dt>
+              <dd class="font-monospace">{{ s.studentCode }}</dd>
+              <dt>Hashed token</dt>
+              <dd class="font-monospace text-break">{{ s.hashedToken }}</dd>
+              <dt>Barcode</dt>
+              <dd class="font-monospace">{{ s.barcode || '—' }}</dd>
+            </dl>
+          </div>
+
+          <div class="col-12">
+            <h3 class="h6 section-title">Session</h3>
+            @if (s.assignedSession; as session) {
+              <div class="session-card">
+                <div class="session-name">{{ session.sessionName }}</div>
+                <div class="session-meta">
+                  <span class="badge text-bg-light">{{ session.occurrenceType }}</span>
+                  <span class="badge text-bg-light">{{ session.paymentType }}</span>
+                  <span class="badge text-bg-light">{{ session.sessionAmount }} EGP</span>
+                </div>
+              </div>
+            } @else {
+              <p class="text-muted mb-0">Unassigned — no session currently linked.</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+}

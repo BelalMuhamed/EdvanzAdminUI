@@ -1,0 +1,220 @@
+<div class="page-header">
+  <div>
+    <h2 class="h4 mb-1">Students</h2>
+    <p class="text-muted mb-0">Platform-wide student directory.</p>
+  </div>
+  <a routerLink="/students/new" class="btn btn-primary">+ New student</a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="filters-row mb-2">
+      <div class="filter-teacher">
+        <app-searchable-select
+          [options]="teacherOptions()"
+          [selectedValue]="selectedTeacherId"
+          allLabel="All teachers"
+          placeholder="Filter by teacher"
+          searchPlaceholder="Search teachers…"
+          (selectedValueChange)="onTeacherFilterChange($event)"
+        />
+      </div>
+      <div class="filter-search">
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Search by name or student code…"
+          [formControl]="searchControl"
+        />
+      </div>
+    </div>
+
+    <div class="chips-row mb-3">
+      <button
+        type="button"
+        class="chip"
+        [class.chip-active]="missingStudentPhone()"
+        (click)="toggleMissingFilter('missingStudentPhone')"
+      >
+        Missing student phone
+      </button>
+      <button
+        type="button"
+        class="chip"
+        [class.chip-active]="missingParentPhone()"
+        (click)="toggleMissingFilter('missingParentPhone')"
+      >
+        Missing parent phone
+      </button>
+      <button
+        type="button"
+        class="chip"
+        [class.chip-active]="missingSession()"
+        (click)="toggleMissingFilter('missingSession')"
+      >
+        Missing session
+      </button>
+    </div>
+
+    @if (page(); as p) {
+      @if (p.data.length === 0) {
+        <app-empty-state
+          icon="🎓"
+          title="No students found"
+          message="Try a different search, teacher filter, or clear the missing-field filters."
+        />
+      } @else {
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Teacher</th>
+                <th>Student phone</th>
+                <th>Parent phone</th>
+                <th>Session</th>
+                <th>Complete</th>
+                <th>Account</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (student of p.data; track student.id) {
+                <tr>
+                  <td class="fw-medium">{{ student.studentName }}</td>
+                  <td class="text-muted font-monospace">{{ student.studentCode }}</td>
+                  <td>{{ student.teacherName || '—' }}</td>
+                  <td>{{ student.studentPhoneNumber || '—' }}</td>
+                  <td>{{ student.parentPhoneNumber || '—' }}</td>
+                  <td>{{ student.sessionName || 'Unassigned' }}</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.text-bg-success]="student.isComplete"
+                      [class.text-bg-secondary]="!student.isComplete"
+                    >
+                      {{ student.isComplete ? 'Complete' : 'Incomplete' }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (student.linkId != null) {
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-success"
+                        [disabled]="linkActionBusyId() === student.id"
+                        (click)="unlink(student)"
+                      >
+                        {{ linkActionBusyId() === student.id ? 'Unlinking…' : 'Linked · Unlink' }}
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        [disabled]="linkActionBusyId() === student.id"
+                        (click)="openLinkPicker(student)"
+                      >
+                        Not linked · Link
+                      </button>
+                    }
+                  </td>
+                  <td class="text-end text-nowrap">
+                    <a
+                      [routerLink]="['/students', student.id]"
+                      class="btn btn-sm btn-outline-secondary"
+                    >
+                      View
+                    </a>
+                    <a
+                      [routerLink]="['/students', student.id, 'edit']"
+                      class="btn btn-sm btn-outline-secondary ms-1"
+                    >
+                      Edit
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center pt-2">
+          <small class="text-muted">
+            Showing {{ p.data.length }} of {{ p.totalCount }} students
+          </small>
+          <div class="btn-group">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              [disabled]="p.page <= 1"
+              (click)="goToPage(p.page - 1)"
+            >
+              Previous
+            </button>
+            <span class="btn btn-outline-secondary btn-sm disabled">
+              {{ p.page }} / {{ p.totalPages || 1 }}
+            </span>
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              [disabled]="p.page >= p.totalPages"
+              (click)="goToPage(p.page + 1)"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+@if (pickerOpen()) {
+  <div class="picker-backdrop" (click)="closePicker()"></div>
+  <div class="picker-modal" role="dialog" aria-modal="true">
+    <h5 class="picker-title">
+      Link {{ pickerTarget()?.studentName }} to a connected account
+    </h5>
+    <p class="picker-subtitle text-muted">
+      Accounts that requested a connection to this teacher but aren't bound to a roster record yet.
+    </p>
+
+    @if (pickerLoading()) {
+      <p class="text-muted">Loading…</p>
+    } @else if (pickerOptions().length === 0) {
+      <app-empty-state
+        icon="🔗"
+        title="No unbound connections"
+        message="No student account for this teacher is currently connected and unlinked."
+      />
+    } @else {
+      <ul class="picker-list">
+        @for (option of pickerOptions(); track option.linkId) {
+          <li class="picker-item">
+            <div>
+              <div class="fw-medium">{{ option.studentFullName }}</div>
+              <div class="text-muted small">
+                {{ option.studentAccountCode }}
+                @if (option.studentPhoneNumber) {
+                  · {{ option.studentPhoneNumber }}
+                }
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-primary"
+              [disabled]="linkActionBusyId() === pickerTarget()?.id"
+              (click)="pickLink(option)"
+            >
+              {{ linkActionBusyId() === pickerTarget()?.id ? 'Linking…' : 'Link' }}
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    <div class="d-flex justify-content-end pt-3">
+      <button type="button" class="btn btn-outline-secondary" (click)="closePicker()">Close</button>
+    </div>
+  </div>
+}

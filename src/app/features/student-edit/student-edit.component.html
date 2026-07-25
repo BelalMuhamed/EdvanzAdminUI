@@ -1,0 +1,90 @@
+@if (loading()) {
+  <p class="text-muted">Loading…</p>
+} @else if (notFound()) {
+  <app-empty-state
+    icon="🚫"
+    title="Student not found"
+    message="This student may have been deleted or the link is incorrect."
+  />
+} @else {
+  <div class="page-header">
+    <h2 class="h4 mb-0">Edit student</h2>
+    <a [routerLink]="['/students', studentId]" class="btn btn-outline-secondary">Back to profile</a>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="teacher">Teacher</label>
+            <app-searchable-select
+              id="teacher"
+              [options]="teacherOptions()"
+              [selectedValue]="teacherOptions()[0]?.value ?? null"
+              [disabled]="true"
+              allLabel="—"
+              placeholder="—"
+            />
+            <div class="form-text">Reassigning a student to a different teacher isn't supported.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="studentName">Student name *</label>
+            <input
+              id="studentName"
+              class="form-control"
+              formControlName="studentName"
+              [class.is-invalid]="invalid('studentName')"
+            />
+            @if (invalid('studentName')) {
+              <div class="invalid-feedback">Student name is required.</div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="studentPhoneNumber">Student phone</label>
+            <input id="studentPhoneNumber" class="form-control" formControlName="studentPhoneNumber" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="parentPhoneNumber">Parent phone</label>
+            <input id="parentPhoneNumber" class="form-control" formControlName="parentPhoneNumber" />
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="studentCode">Student code</label>
+            <input id="studentCode" class="form-control" formControlName="studentCode" />
+            <div class="form-text">
+              Only used when the teacher's code-generation mode is Manual; ignored otherwise.
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="session">Assigned session</label>
+            <app-searchable-select
+              id="session"
+              [options]="sessionOptions()"
+              [selectedValue]="selectedSessionId()"
+              [disabled]="sessionsLoading()"
+              allLabel="Unassigned"
+              placeholder="Unassigned"
+              searchPlaceholder="Search sessions…"
+              (selectedValueChange)="onSessionChange($event)"
+            />
+            @if (sessionsLoading()) {
+              <div class="form-text">Loading sessions…</div>
+            }
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 pt-4">
+          <a [routerLink]="['/students', studentId]" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+            {{ submitting() ? 'Saving…' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

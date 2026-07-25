@@ -109,5 +109,6 @@ export class SidebarComponent {
     { label: 'Dashboard  ', icon: '📊', route: '/dashboard' },
     { label: 'Teachers  ', icon: '🧑‍🏫', route: '/teachers' },
     { label: 'Assistants  ', icon: '🧑‍💼', route: '/assistants' },
+    { label: 'Students  ', icon: '🎓', route: '/students' },
   ];
 }

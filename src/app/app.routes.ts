@@ -46,6 +46,13 @@ export const APP_ROUTES: Routes = [
             (m) => m.ASSISTANTS_ROUTES,
           ),
       },
+      {
+        path: 'students',
+        loadChildren: () =>
+          import('./features/Student list/students.routes').then(
+            (m) => m.STUDENTS_ROUTES,
+          ),
+      },
     ],
   },
   {
